@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE Project SYSTEM "Project-5.1.dtd">
 <!-- eric project file for project flightlinks -->
-<!-- Saved: 2015-02-07, 16:04:55 -->
+<!-- Saved: 2015-02-07, 19:52:03 -->
 <!-- Copyright (C) 2015 Daniel Minarik,  -->
 <Project version="5.1">
   <Language></Language>
@@ -15,8 +15,13 @@
   <Sources>
     <Source>flightlinks.py</Source>
     <Source>__init__.py</Source>
+    <Source>Ui_mainform.py</Source>
+    <Source>mainform.py</Source>
+    <Source>airportsmodel.py</Source>
   </Sources>
-  <Forms/>
+  <Forms>
+    <Form>mainform.ui</Form>
+  </Forms>
   <Translations/>
   <Resources/>
   <Interfaces/>

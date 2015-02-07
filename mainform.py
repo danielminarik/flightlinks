@@ -40,15 +40,33 @@ class Mainform(QMainWindow, Ui_MainWindow):
         self.loadConfig()
         
         # Main configuration for flight search engines
+        self.links_to_open = []
         self.config_dict = {'pelikan.sk':
                                 {'roundtrip': 'https://www.pelikan.sk/sk/#/flights/list?dfc=C{frm}&dtc=C{to}&rfc=C{to}&rtc=C{frm}&dd={date_from}&rd={date_to}&px=1000&ns=0&prc=&rng=1&rbd=0&ct=0',
                                  'multicity': 'https://www.pelikan.sk/sk/#/flights/list?dfc=C{frm}&dtc=C{to}&rfc=C{to}&rtc=C{frm2}&dd={date_from}&rd={date_to}&px=1000&ns=0&prc=&rng=1&rbd=0&ct=0',
                                  'oneway': 'https://www.pelikan.sk/sk/#/flights/list?dfc=C{frm}&dtc=C{to}&rfc=&rtc=&dd={date_from}&rd=&px=1000&ns=0&prc=&rng=1&rbd=0&ct=0',
                                  'date_format': '%Y-%m-%d'},
-                                        
+                            'kayak.com':
+                                {'roundtrip': 'http://www.kayak.com/flights/{frm}-{to}/{date_from}-flexible/{date_to}-flexible',
+                                 'multicity': 'http://www.kayak.com/flights/{frm}-{to}/{date_from}/{to}-{frm2}/{date_to}',
+                                 'oneway': 'http://www.kayak.com/flights/{frm}-{to}/{date_from}-flexible',
+                                 'date_format': '%Y-%m-%d'},
+                            'tripadvisor.com':
+                                {'roundtrip': 'http://www.tripadvisor.sk/CheapFlights?geo=274714&pax0=a&travelers=1&cos=0&nonstop=no&airport0={frm}&nearby0=no&airport1={to}&nearby1=no&date0={date_from}&time0=0024&date1={date_to}&time1=0024&cr=0',
+                                 'multicity': 'http://www.tripadvisor.sk/CheapFlights?geo=274714&pax0=a&travelers=1&cos=0&nonstop=no&airport0={frm}&nearby0=no&airport1={to}&nearby1=no&date0={date_from}&time0=anytime&airport2={to}&nearby2=no&airport3={frm2}&nearby3=no&date1={date_to}&time1=anytime',
+                                 'oneway': 'http://www.tripadvisor.sk/CheapFlights?geo=274714&pax0=a&travelers=1&cos=0&nonstop=no&airport0={frm}&nearby0=no&airport1={to}&nearby1=no&date0={date_from}&time0=0024&cr=0',
+                                 'date_format': '%Y%m%d'},
+                            'momondo.com':
+                                {'roundtrip': 'http://www.momondo.cz/flightsearch/?Search=true&TripType=2&SegNo=2&SO0={frm}&SD0={to}&SDP0={date_from}&SO1={to}&SD1={frm}&SDP1={date_to}&AD=1&TK=ECO&DO=false&NA=false#Search=true&TripType=2&SegNo=2&SO0={frm}&SD0={to}&SDP0={date_from}&SO1={to}&SD1={from}&SDP1={date_to}&AD=1&TK=ECO&DO=false&NA=false',
+                                 'multicity': 'http://www.momondo.cz/flightsearch/?Search=true&TripType=4&SegNo=2&SO0={frm}&SD0={to}&SDP0={date_from}&SO1={to}&SD1={frm2}&SDP1={date_to}&AD=1&TK=ECO&NA=false#Search=true&TripType=4&SegNo=2&SO0={frm}&SD0={to}&SDP0={date_from}&SO1={to}&SD1={frm2}&SDP1={date_to}&AD=1&TK=ECO&NA=false',
+                                 'oneway': 'http://www.momondo.cz/flightsearch/?Search=true&TripType=1&SegNo=1&SO0={frm}&SD0={to}&SDP0={date_from}&AD=1&TK=ECO&DO=false&NA=false#Search=true&TripType=1&SegNo=1&SO0={frm}&SD0={to}&SDP0={date_from}&AD=1&TK=ECO&DO=false&NA=false',
+                                 'date_format': '%d-%m-%Y'},
+                            'skyscanner.com':
+                                {'roundtrip': 'http://www.skyscanner.cz/transport/flights/{frm}/{to}/{date_from}/{date_to}/',
+                                 'multicity': None,
+                                 'oneway': 'http://www.skyscanner.cz/transport/flights/{frm}/{to}/{date_from}/',
+                                 'date_format': '%y%m%d'},
                             }
-        self.links_to_open = []
-
     def loadConfig(self):
         self.config.read(INIFILE)
         for section in self.config.sections():
@@ -97,6 +115,10 @@ class Mainform(QMainWindow, Ui_MainWindow):
             engine = 'kayak.com'
         elif self.rb_tripadvisorcom.isChecked():
             engine = 'tripadvisor.com'
+        elif self.rb_momondocom.isChecked():
+            engine = 'momondo.com'
+        elif self.rb_skyscannercom.isChecked():
+            engine = 'skyscanner.com'
 
         # Widgets
         w_tv_from = self.tabWidget.currentWidget().findChild(QTableView, 'tv_from')
@@ -114,11 +136,17 @@ class Mainform(QMainWindow, Ui_MainWindow):
         self.links_to_open = []
         if self.rb_roundtrip.isChecked():
             direction = 'roundtrip'
+            # If not possible
+            if self.config_dict[engine][direction] == None:
+                return
             for f in airports_from:
                 for t in airports_to:
                     self.links_to_open.append(self.config_dict[engine][direction].format(frm=f, to=t, date_from=date_from, date_to=date_to))
         elif self.rb_multicity.isChecked():
             direction = 'multicity'
+            # If not possible
+            if self.config_dict[engine][direction] == None:
+                return
             for f in airports_from:
                 for t in airports_to:
                     for f2 in airports_from:
@@ -126,6 +154,9 @@ class Mainform(QMainWindow, Ui_MainWindow):
                             self.links_to_open.append(self.config_dict[engine][direction].format(frm=f, to=t, frm2=f2, date_from=date_from, date_to=date_to))
         elif self.rb_oneway.isChecked():
             direction = 'oneway'
+            # If not possible
+            if self.config_dict[engine][direction] == None:
+                return
             for f in airports_from:
                 for t in airports_to:
                     self.links_to_open.append(self.config_dict[engine][direction].format(frm=f, to=t, date_from=date_from, date_to=date_to))
